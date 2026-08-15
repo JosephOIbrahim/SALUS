@@ -1,5 +1,7 @@
 # SALUS — operator README
 
+![gates](https://github.com/JosephOIbrahim/SALUS/actions/workflows/gates.yml/badge.svg)
+
 **A smoke detector for a mind's condition.**
 
 Four gauges read from ops that already run. When one crosses its
@@ -13,8 +15,9 @@ Thesis: **Condition Wakes Memory** — the state is *measured, not reported*.
 
 ## Is it healthy? One command
 
+From the repo root (system Python ≥ 3.13, zero dependencies):
+
 ```
-cd G:\SALUS
 python verify\success_signature.py
 ```
 
@@ -92,7 +95,7 @@ harness\runs\<name>_<stamp>\   vitals.jsonl · events.jsonl · verdict.json
   last green.
 
 - **`ModuleNotFoundError: salus`** → wrong folder. Everything runs from
-  `G:\SALUS` root.
+  the repo root.
 
 - **NO on [2], zero wakes** → calibration band swallowed the crossing.
   Check `entropy_min_band` / `scattered_start` in the mission JSON.
@@ -109,4 +112,6 @@ harness\runs\<name>_<stamp>\   vitals.jsonl · events.jsonl · verdict.json
 
 **History:** `CHANGELOG.md` · **Decisions:** `docs\decisions\ADR-*.md`
 
-**Proprietary — nothing from this repo goes public.** (`NOTICE.md`)
+**Source-available, all rights reserved — patents pending.** No use,
+reuse, or patent rights granted; reading and evaluation only. See
+`LICENSE` and `NOTICE.md`. External contributions not accepted.

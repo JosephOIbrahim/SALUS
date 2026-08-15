@@ -1,12 +1,13 @@
-# NOTICE — PROPRIETARY
+# NOTICE
 
 Copyright (c) 2026 Joseph Ibrahim. All rights reserved.
 
-This repository contains unfiled invention material — Condition Wakes
-Memory (CWM) and the SALUS wake predicate — plus material adjacent to
-three pending patent filings (USD Cognitive Substrate; Digital Injection
-Framework; Cosmos Predictive Lighting).
+SALUS implements **Condition Wakes Memory (CWM)** — retrieval triggered
+by the knower's measured condition, not content match. The mechanisms
+in this repository relate to pending patent filings.
 
-Do not publish, distribute, excerpt, or discuss the mechanisms in this
-repository publicly. High-level concepts cleared for public discussion
-are tracked separately (see patent-status). When in doubt: NDA only.
+This code is **source-available for reading and evaluation only** — see
+`LICENSE`. No use, reuse, redistribution, derivative-work, or patent
+rights are granted.
+
+External contributions are not accepted at this time.

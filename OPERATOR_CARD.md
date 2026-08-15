@@ -3,7 +3,7 @@
 **One system. One health question. One command.**
 
 ```
-cd G:\SALUS
+cd <repo root>
 python verify\success_signature.py
 ```
 
@@ -34,9 +34,9 @@ Run folders regenerate — safe to delete.
 
 ## Break glass
 
-**NO on [3] replay** → nondeterminism entered. Doctrine list: CLAUDE.md.
+**NO on [3] replay** → nondeterminism entered. Doctrine list: DESIGN.md.
 
-**ModuleNotFoundError: salus** → wrong folder. Run from `G:\SALUS` root.
+**ModuleNotFoundError: salus** → wrong folder. Run from the repo root.
 
 **NO on [2], zero wakes** → band swallowed the crossing. Check
 `entropy_min_band` / `scattered_start` in the mission JSON.
@@ -51,4 +51,4 @@ Handle with care .... `src\salus\wake\` (floors + doctrine)
 
 Read first .......... `BLUEPRINT.md` · `DESIGN.md` · `NOTICE.md`
 
-**Proprietary — nothing from this repo goes public. (NOTICE.md)**
+**Source-available, all rights reserved — patents pending. (LICENSE · NOTICE.md)**
