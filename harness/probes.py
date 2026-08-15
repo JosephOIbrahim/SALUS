@@ -54,8 +54,14 @@ def probe_event_data(r: RunResult) -> tuple[str, bool, str]:
     rec = r.events[0].to_record()
     needed = {"tick", "rule_id", "channel", "value", "enter_threshold",
               "summon_class", "contract", "counterfactual_hash"}
-    ok = needed.issubset(rec.keys()) and bool(rec["counterfactual_hash"])
-    return ("wake event visible as data", ok, "full contract + counterfactual persisted")
+    missing = sorted(needed - rec.keys())
+    ok = not missing and bool(rec.get("counterfactual_hash"))
+    detail = (
+        "full contract + counterfactual persisted"
+        if ok
+        else (f"missing fields: {missing}" if missing else "counterfactual_hash empty")
+    )
+    return ("wake event visible as data", ok, detail)
 
 
 def run_all(

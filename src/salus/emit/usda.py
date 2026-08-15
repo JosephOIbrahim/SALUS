@@ -24,7 +24,7 @@ def write_stage(path: Path, result: RunResult) -> None:
         attr = salus.CreateAttribute(f"vitals:{channel}", Sdf.ValueTypeNames.Float)
         for v in result.vitals:
             attr.Set(float(getattr(v, channel)), v.tick)
-    wakes = stage.DefinePrim("/Salus/Wakes", "Scope")
+    stage.DefinePrim("/Salus/Wakes", "Scope")
     for i, e in enumerate(result.events):
         prim = stage.DefinePrim(f"/Salus/Wakes/wake_{i:03d}", "Scope")
         for key, value in e.to_record().items():

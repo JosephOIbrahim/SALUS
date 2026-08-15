@@ -42,10 +42,9 @@ class TestEngineFloors(unittest.TestCase):
             ops=ops, bands=(), rules=(), floors=Floors(1, 1, 1),
             window=16, suppress_wakes=True,
         )
-        while probe._tick < 40:
-            probe._step()
+        baseline = probe.collect_vitals(40)
         bands = (
-            calibrate_entropy_band(probe._vitals),
+            calibrate_entropy_band(baseline),
             absolute_band("staleness_min_u", -1, 0.02, 0.04),
             absolute_band("consolidation_pressure", +1, 0.9, 0.8),
         )

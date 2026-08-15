@@ -11,7 +11,9 @@ from ..wake.predicate import RunResult
 
 
 def _canon(obj: object) -> str:
-    return json.dumps(obj, sort_keys=True, separators=(",", ":"))
+    # allow_nan=False: a non-finite float on the evidence path is a bug;
+    # fail loudly instead of emitting the non-JSON literal `Infinity`.
+    return json.dumps(obj, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
 
 def write_vitals(path: Path, result: RunResult) -> None:

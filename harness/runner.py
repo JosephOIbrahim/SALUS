@@ -32,10 +32,9 @@ def calibrate(m: Mission, ops: SyntheticOps):
         ops=ops, bands=(), rules=(), floors=Floors(1, 1, 1),
         window=m.window, suppress_wakes=True,
     )
-    while probe._tick < m.calibration_ticks:
-        probe._step()
+    baseline = probe.collect_vitals(m.calibration_ticks)
     entropy_band = calibrate_entropy_band(
-        probe._vitals, k_sigma=m.entropy_k_sigma, min_width=m.entropy_min_band
+        baseline, k_sigma=m.entropy_k_sigma, min_width=m.entropy_min_band
     )
     return (
         entropy_band,

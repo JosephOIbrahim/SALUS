@@ -9,10 +9,11 @@ the blueprint, the blueprint wins (it is newer).
 ## Commands
 
 ```
-python -m unittest discover -s tests      # unit gates (14)
-python verify\determinism.py              # run twice, hash compare
+python -m unittest discover -s tests      # unit gates (27)
+python verify\determinism.py              # cross-process hash compare
 python verify\success_signature.py        # THE gate: five yeses or fail
 python harness\runner.py harness\missions\clip_two.json
+ruff check .                              # lint (optional locally; CI runs it)
 ```
 
 All commands run from repo root with system Python >= 3.13. Zero

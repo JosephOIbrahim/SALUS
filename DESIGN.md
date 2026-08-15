@@ -1,4 +1,6 @@
-# DESIGN — SALUS v0.1.0
+# DESIGN — SALUS
+
+*Version lives in `pyproject.toml` / `salus.__version__`; history in CHANGELOG.md.*
 
 ## The claim
 
@@ -52,6 +54,10 @@ Forbidden introductions: datetime.now() inside src/salus, unseeded
 random, dict/set iteration into evidence without sorting, threads in
 the engine, any dependency in the core.
 
+The determinism gate compares a fresh-interpreter run under a different
+PYTHONHASHSEED against the in-process run — replay-identical must hold
+across processes, not merely within one.
+
 ## Gate-0 re-sequencing (blueprint amendment)
 
 The original build order gated everything on Phase 0 verification. The
@@ -60,7 +66,7 @@ with the real substrate, not this standalone build. The harness runs on
 seeded synthetic ops; the production adapter binds later behind the
 same `OpsReader` protocol.
 
-## Two fixes made during the build (honest record)
+## Fixes made during and after the build (honest record)
 
 1. Classic Kahan fails the textbook cancellation case
    ([1e16, 1, -1e16]); the unit test caught it. Upgraded to
@@ -68,3 +74,18 @@ same `OpsReader` protocol.
 2. verify/ scripts initially put only harness/ on sys.path; probes
    imports salus at module load. Both verify scripts now insert src/
    and harness/ explicitly.
+3. Contract ranges were placeholders (lo=0, hi=inf); the inf leaked
+   into events.jsonl as the literal `Infinity` — deterministic, but not
+   strict JSON. Ranges now derive from the fired band plus finite
+   per-channel bounds (CHANNEL_BOUNDS), and both emit paths set
+   allow_nan=False as a tripwire. Result hashes changed; v0.1.0
+   evidence hashes predate this fix.
+4. The counterfactual fork deep-copied the entire engine — ops reader
+   and run history included. It now shares the read-only ops reader and
+   copies only window state: sharing is the structural read-only claim,
+   exercised, and a live substrate adapter at Gate 0 needs no deepcopy.
+5. The harness reached into engine privates for calibration; the engine
+   now exposes collect_vitals(until_tick). Rule channels and rule/band
+   direction agreement are validated at engine construction. The
+   counterfactual probe has a falsification test — a judge that has
+   never said NO is unproven.

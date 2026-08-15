@@ -48,13 +48,28 @@ _REQUIRED = (
     "pressure_enter", "pressure_exit", "expectations",
 )
 
+_REQUIRED_EXPECTATIONS = (
+    "min_wakes", "max_wakes", "dormant_until", "zero_floor_violations",
+)
+
 
 def load_mission(path: Path) -> Mission:
     raw = json.loads(path.read_text(encoding="utf-8"))
     missing = [k for k in _REQUIRED if k not in raw]
     if missing:
         raise MissionError(f"mission missing keys: {missing}")
+    # Unknown keys are rejected, not ignored: a typo'd key silently
+    # falling back to nothing is how missions drift from their authors.
+    unknown = sorted(set(raw) - set(_REQUIRED))
+    if unknown:
+        raise MissionError(f"mission has unknown keys: {unknown}")
     exp = raw["expectations"]
+    missing_exp = [k for k in _REQUIRED_EXPECTATIONS if k not in exp]
+    if missing_exp:
+        raise MissionError(f"expectations missing keys: {missing_exp}")
+    unknown_exp = sorted(set(exp) - set(_REQUIRED_EXPECTATIONS))
+    if unknown_exp:
+        raise MissionError(f"expectations has unknown keys: {unknown_exp}")
     mission = Mission(
         name=str(raw["name"]),
         seed=int(raw["seed"]),
@@ -79,8 +94,17 @@ def load_mission(path: Path) -> Mission:
             zero_floor_violations=bool(exp["zero_floor_violations"]),
         ),
     )
+    if mission.ticks <= 0 or mission.window < 1:
+        raise MissionError("require ticks > 0 and window >= 1")
+    if mission.refractory_ticks < 0 or mission.counterfactual_ticks < 0:
+        raise MissionError("refractory_ticks and counterfactual_ticks must be >= 0")
+    if mission.budget_max < 1 or mission.budget_window < 1:
+        raise MissionError("require budget_max >= 1 and budget_window >= 1")
     if not (mission.window <= mission.calibration_ticks <= mission.scattered_start):
         raise MissionError("require window <= calibration_ticks <= scattered_start")
     if mission.scattered_start >= mission.ticks:
         raise MissionError("scattered_start must be < ticks")
+    e = mission.expectations
+    if not (0 <= e.min_wakes <= e.max_wakes):
+        raise MissionError("require 0 <= min_wakes <= max_wakes")
     return mission

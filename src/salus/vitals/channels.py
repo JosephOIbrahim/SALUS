@@ -22,6 +22,20 @@ CHANNELS = (
     "consolidation_pressure",
 )
 
+# Finite contract bounds per channel. The wake contract needs a
+# validatable range; infinity is not one (and is not strict JSON).
+# Entropy: bits, 2^64 distinct targets is a generous ceiling. Trend and
+# pressure: wide finite sentinels — the point is detectability, not
+# tightness.
+CHANNEL_BOUNDS: dict[str, tuple[float, float]] = {
+    "staleness_min_u": (0.0, 1.0),
+    "attention_entropy": (0.0, 64.0),
+    "revisit_rate": (0.0, 1.0),
+    "novel_touch_ratio": (0.0, 1.0),
+    "utility_trend": (-1e6, 1e6),
+    "consolidation_pressure": (0.0, 1e6),
+}
+
 
 @dataclass(frozen=True, slots=True)
 class Vitals:

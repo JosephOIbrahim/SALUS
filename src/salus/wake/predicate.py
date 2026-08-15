@@ -4,15 +4,16 @@ Deterministic by doctrine: tick-driven (no wall clock), seeded ops only,
 fixed rule order, sorted-key serialization, Kahan reductions. Same
 signals => same wake, replay-identical, or it's broken.
 
-The counterfactual fork: at each wake the engine deep-copies itself,
-suppresses wakes, and runs k ticks forward. Because summon is read-only,
-the fork's vitals must equal the main path's vitals exactly — the stored
-hash is both the dailies variant and the empirical read-only proof.
+The counterfactual fork: at each wake the engine forks its window state
+— SHARING the ops reader, which is sound precisely because ops is
+read-only — suppresses wakes, and runs k ticks forward. Because summon
+is read-only, the fork's vitals must equal the main path's vitals
+exactly — the stored hash is both the dailies variant and the empirical
+read-only proof.
 """
 
 from __future__ import annotations
 
-import copy
 import hashlib
 import json
 from dataclasses import dataclass
@@ -20,7 +21,7 @@ from collections.abc import Sequence
 
 from ..ops.interface import OpsReader, OpsSnapshot
 from ..setpoints import Band, Hysteresis
-from ..vitals.channels import Vitals, compute_vitals
+from ..vitals.channels import CHANNEL_BOUNDS, CHANNELS, Vitals, compute_vitals
 from .contract import WakeContract, validate
 from .events import WakeEvent
 from .floors import FloorGuard, Floors
@@ -29,7 +30,8 @@ from .policy import Rule
 
 def hash_vitals(slice_: Sequence[Vitals]) -> str:
     payload = json.dumps(
-        [v.as_dict() for v in slice_], sort_keys=True, separators=(",", ":")
+        [v.as_dict() for v in slice_],
+        sort_keys=True, separators=(",", ":"), allow_nan=False,
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
@@ -64,6 +66,18 @@ class SalusEngine:
         self._vitals: list[Vitals] = []
         self._events: list[WakeEvent] = []
         self._tick = 0
+        for rule in self.rules:
+            if rule.channel not in CHANNELS:
+                raise ValueError(
+                    f"rule {rule.rule_id}: unknown channel {rule.channel!r}"
+                )
+            if self.hys.has(rule.channel):
+                b = self.hys.band(rule.channel)
+                if b.direction != rule.direction:
+                    raise ValueError(
+                        f"rule {rule.rule_id}: direction {rule.direction:+d} "
+                        f"disagrees with band direction {b.direction:+d}"
+                    )
 
     def _step(self) -> None:
         t = self._tick
@@ -93,10 +107,17 @@ class SalusEngine:
                 continue  # refractory or budget: blocked, not a violation
             cf_hash = self._counterfactual_hash()
             band = self.hys.band(rule.channel)
+            # Range is the side of the enter threshold that fired, closed
+            # by the channel's finite bound on the other end.
+            lo, hi = CHANNEL_BOUNDS[rule.channel]
+            if band.direction > 0:
+                lo = band.enter
+            else:
+                hi = band.enter
             contract = WakeContract(
                 kind=rule.summon_class,
-                lo=0.0,
-                hi=float("inf"),
+                lo=lo,
+                hi=hi,
                 authority="salus.policy",
                 valid_from_tick=v.tick,
                 valid_until_tick=v.tick + self.guard.floors.refractory_ticks,
@@ -116,18 +137,39 @@ class SalusEngine:
             )
             self.guard.record_wake(v.tick)
 
+    def collect_vitals(self, until_tick: int) -> tuple[Vitals, ...]:
+        """Public calibration surface: advance to `until_tick` (clamped
+        to the ops horizon) and return every vitals sample so far."""
+        while self._tick < min(until_tick, self.ops.ticks):
+            self._step()
+        return tuple(self._vitals)
+
     def _counterfactual_hash(self) -> str:
         """Fork now, suppress wakes, run k ticks. The branch not taken,
         persisted as data. Read-only floor holds iff it matches the main
-        path over the same span."""
-        fork = copy.deepcopy(self)
-        fork.suppress = True
-        base = len(fork._vitals)
+        path over the same span.
+
+        The fork SHARES the ops reader — read-only by contract, so
+        sharing is sound and is itself the structural claim — and copies
+        only the window state it will mutate. Cost is O(window), not
+        O(run history), and a live substrate adapter needs no deepcopy."""
+        fork = SalusEngine(
+            ops=self.ops,
+            bands=(),
+            rules=(),
+            floors=self.guard.floors,
+            window=self.window,
+            counterfactual_ticks=0,
+            suppress_wakes=True,
+        )
+        fork._snaps = list(self._snaps)
+        fork._seen = set(self._seen)
+        fork._tick = self._tick
         for _ in range(self.cft):
             if fork._tick >= fork.ops.ticks:
                 break
             fork._step()
-        return hash_vitals(fork._vitals[base:])
+        return hash_vitals(fork._vitals)
 
     def run(self) -> RunResult:
         while self._tick < self.ops.ticks:

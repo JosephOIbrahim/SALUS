@@ -22,8 +22,8 @@ the failing line — it names the broken property.
 ## All commands
 
 ```
-python -m unittest discover -s tests                      # parts check (14)
-python verify\determinism.py                              # replay-identity only
+python -m unittest discover -s tests                      # parts check (27)
+python verify\determinism.py                              # replay identity, cross-process
 python verify\success_signature.py                        # THE gate
 python harness\runner.py harness\missions\clip_two.json   # general runner
 ```
@@ -31,7 +31,7 @@ python harness\runner.py harness\missions\clip_two.json   # general runner
 ## What you'll see
 
 ```
-SALUS v0.1.0 — success signature — mission: clip_two
+SALUS v0.1.1 — success signature — mission: clip_two
   [1] dormant while entropy low ............. YES
   [2] wake fires on the crossing ............ YES
   [3] identical replay, run twice ........... YES
@@ -68,4 +68,6 @@ care: `src\salus\wake\` — floors and doctrine live there. Read first:
 
 `BLUEPRINT.md` (source of truth), `DESIGN.md`, `NOTICE.md` (proprietary —
 
-do not publish anything from this repo).
+do not publish anything from this repo). History: `CHANGELOG.md`;
+
+decisions: `docs\decisions\`. CI runs lint + all three gates on push.

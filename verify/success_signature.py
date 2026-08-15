@@ -16,6 +16,7 @@ sys.path.insert(0, str(_REPO / "harness"))
 import probes  # noqa: E402
 import runner  # noqa: E402
 from mission_schema import load_mission  # noqa: E402
+from salus import __version__  # noqa: E402
 
 LINES = (
     "dormant while entropy low",
@@ -38,7 +39,7 @@ def main() -> int:
         "passed": all(ok for _, ok, _ in checks),
     }
     runner.write_evidence(mission, ra, verdict)
-    print(f"SALUS v0.1.0 — success signature — mission: {mission.name}")
+    print(f"SALUS v{__version__} — success signature — mission: {mission.name}")
     for i, (name, ok, detail) in enumerate(checks, start=1):
         dots = "." * (38 - len(name))
         print(f"  [{i}] {name} {dots} {'YES' if ok else 'NO'}  ({detail})")
