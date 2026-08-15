@@ -1,12 +1,15 @@
 # SALUS — operator README
 
-**One line:** a smoke detector for a mind's condition. Four gauges read
+**A smoke detector for a mind's condition.**
 
-from ops that already run; when one crosses its calibrated band, SALUS
+Four gauges read from ops that already run. When one crosses its
+calibrated band, SALUS wakes a matched class of memories.
 
-wakes a matched class of memories. Read-only, deterministic, replayable.
+**Read-only. Deterministic. Replayable.**
 
-Thesis: **Condition Wakes Memory.** The state is measured, not reported.
+Thesis: **Condition Wakes Memory** — the state is *measured, not reported*.
+
+---
 
 ## Is it healthy? One command
 
@@ -15,20 +18,9 @@ cd G:\SALUS
 python verify\success_signature.py
 ```
 
-Five YES lines ending `5/5 — v1 SHIPPED` = healthy. Anything else, read
+**Healthy =** five YES lines ending `5/5 — v1 SHIPPED`.
 
-the failing line — it names the broken property.
-
-## All commands
-
-```
-python -m unittest discover -s tests                      # parts check (27)
-python verify\determinism.py                              # replay identity, cross-process
-python verify\success_signature.py                        # THE gate
-python harness\runner.py harness\missions\clip_two.json   # general runner
-```
-
-## What you'll see
+Anything else → the failing line *names the broken property*.
 
 ```
 SALUS v0.1.1 — success signature — mission: clip_two
@@ -40,34 +32,80 @@ SALUS v0.1.1 — success signature — mission: clip_two
   5/5 — v1 SHIPPED
 ```
 
-Evidence: `harness\runs\<mission>_<stamp>\` — newest named in
+---
 
-`harness\runs\LATEST.txt`. Inside: `vitals.jsonl`, `events.jsonl`,
+## The path — one glance
 
-`verdict.json`. Run folders are disposable; they regenerate.
+```mermaid
+flowchart LR
+    A["four locked ops<br>(run as-is)"] --> B["vitals readers<br>(no new op)"]
+    B --> C["setpoints<br>(calibrated + hysteresis)"]
+    C --> D["wake predicate<br>(deterministic)"]
+    D --> E["summon<br>(read-only)"]
+    R["floors rail — never evict · never mutate · t ≤ own now · authority declared"]
+    D -.enforced by.-> R
+```
+
+**Why the wake never flaps** — each band is a two-state machine.
+It fires *exactly once* per crossing episode:
+
+```mermaid
+stateDiagram-v2
+    [*] --> armed
+    armed --> disarmed: value crosses ENTER — wake fires once
+    disarmed --> armed: value exits past EXIT — re-arms
+```
+
+---
+
+## All commands
+
+```
+python verify\success_signature.py                        # THE gate
+python -m unittest discover -s tests                      # parts check (27)
+python verify\determinism.py                              # replay identity, cross-process
+python harness\runner.py harness\missions\clip_two.json   # general runner
+ruff check .                                              # lint (CI pins 0.15.10)
+```
+
+**Zero dependencies.** System Python ≥ 3.13, run from repo root.
+CI runs lint + all three gates on every push.
+
+---
+
+## Evidence
+
+```
+harness\runs\LATEST.txt        name of newest run folder
+harness\runs\<name>_<stamp>\   vitals.jsonl · events.jsonl · verdict.json
+```
+
+**Run folders are disposable** — they regenerate, byte-identical.
+
+---
 
 ## When it breaks
 
-- **NO on [3]:** nondeterminism got in — wall clock, unsorted iteration,
+- **NO on [3] replay** → nondeterminism got in — wall clock, unsorted
+  iteration, a new dependency. Doctrine list: `DESIGN.md`. Diff against
+  last green.
 
-  a new dependency. Doctrine list is in CLAUDE.md; diff against last green.
+- **`ModuleNotFoundError: salus`** → wrong folder. Everything runs from
+  `G:\SALUS` root.
 
-- **ModuleNotFoundError: salus** — ran from the wrong folder. Everything
+- **NO on [2], zero wakes** → calibration band swallowed the crossing.
+  Check `entropy_min_band` / `scattered_start` in the mission JSON.
 
-  runs from `G:\SALUS` root.
-
-- **NO on [2], zero wakes:** calibration band swallowed the crossing —
-
-  check `entropy_min_band` / `scattered_start` in the mission JSON.
+---
 
 ## Touch map
 
-Safe to edit freely: `harness\missions\*.json`, `tests\`. Handle with
+| Zone | Paths |
+|---|---|
+| **Edit freely** | `harness\missions\*.json` · `tests\` |
+| **Handle with care** | `src\salus\wake\` — floors + doctrine live there |
+| **Read first** | `BLUEPRINT.md` (source of truth) · `DESIGN.md` · `NOTICE.md` |
 
-care: `src\salus\wake\` — floors and doctrine live there. Read first:
+**History:** `CHANGELOG.md` · **Decisions:** `docs\decisions\ADR-*.md`
 
-`BLUEPRINT.md` (source of truth), `DESIGN.md`, `NOTICE.md` (proprietary —
-
-do not publish anything from this repo). History: `CHANGELOG.md`;
-
-decisions: `docs\decisions\`. CI runs lint + all three gates on push.
+**Proprietary — nothing from this repo goes public.** (`NOTICE.md`)
