@@ -86,6 +86,13 @@ class SalusEngine:
                         f"rule {rule.rule_id}: direction {rule.direction:+d} "
                         f"disagrees with band direction {b.direction:+d}"
                     )
+                lo, hi = CHANNEL_BOUNDS[rule.channel]
+                if not (lo <= b.enter <= hi):
+                    raise ValueError(
+                        f"rule {rule.rule_id}: band enter {b.enter} outside "
+                        f"channel bounds [{lo}, {hi}] — the contract range "
+                        "would invert and every wake would raise"
+                    )
 
     def _step(self) -> None:
         t = self._tick
@@ -112,7 +119,11 @@ class SalusEngine:
             if not fired:
                 continue
             if not self.guard.clear_to_wake(v.tick):
-                continue  # refractory or budget: blocked, not a violation
+                # Blocked by refractory/budget: re-arm so the crossing
+                # retries next tick. Floors pace wakes; they must never
+                # erase a condition that stays true (ADR-0006).
+                self.hys.rearm(rule.channel)
+                continue
             cf_hash = self._counterfactual_hash()
             band = self.hys.band(rule.channel)
             # Range is the side of the enter threshold that fired, closed

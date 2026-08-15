@@ -173,6 +173,102 @@ class TestConstructionRejections(unittest.TestCase):
         with self.assertRaises(ValueError):
             Hysteresis([absolute_band("attention_entropy", +1, 2.0, 3.0)])
 
+    def test_band_enter_outside_channel_bounds_rejected(self):
+        """A threshold beyond CHANNEL_BOUNDS would invert the contract
+        range (lo > hi) and every wake would raise mid-run."""
+        ops = SyntheticOps(seed=1, ticks=10, scattered_start=5)
+        band = absolute_band("staleness_min_u", -1, -2e6, -1.5e6)
+        with self.assertRaises(ValueError):
+            SalusEngine(
+                ops=ops, bands=(band,),
+                rules=(Rule("RX", "staleness_min_u", -1, "x"),),
+                floors=Floors(1, 1, 1), window=4,
+            )
+
+
+class _PinnedEntropyOps:
+    """Attention entropy pinned high, with one low valley — for the
+    blocked-crossing retry semantics (ADR-0006)."""
+
+    def __init__(self, ticks: int) -> None:
+        self._ticks = ticks
+
+    @property
+    def ticks(self) -> int:
+        return self._ticks
+
+    def snapshot(self, tick: int) -> OpsSnapshot:
+        if 4 <= tick <= 6:  # the valley: one target -> entropy 0
+            targets = ("a",) * 4
+        else:  # four distinct targets -> entropy 2.0 bits
+            targets = ("a", "b", "c", "d")
+        return OpsSnapshot(
+            tick=tick,
+            accesses=tuple(AccessEvent(tick=tick, target=t) for t in targets),
+            beliefs=(BeliefState(belief_id="a", utility=0.5, last_access_tick=tick),),
+            utility_total=0.5,
+            deposits_since_consolidation=0,
+            consolidation_capacity=10,
+        )
+
+
+class TestBlockedCrossingRetries(unittest.TestCase):
+    def test_refractory_delays_wake_instead_of_erasing_it(self):
+        """High -> valley (re-arm) -> high again inside refractory: the
+        second crossing must land when the refractory clears, not be
+        silently consumed."""
+        engine = SalusEngine(
+            ops=_PinnedEntropyOps(ticks=30),
+            bands=(absolute_band("attention_entropy", +1, 1.5, 1.0),),
+            rules=(Rule("R1", "attention_entropy", +1, "orientation_anchors"),),
+            floors=Floors(refractory_ticks=10, budget_max=5, budget_window=100),
+            window=2,
+            counterfactual_ticks=1,
+        )
+        result = engine.run()
+        self.assertEqual(len(result.events), 2)
+        first, second = result.events
+        self.assertGreaterEqual(second.tick - first.tick, 10)
+
+
+class _RisingPressureOps:
+    """Deposits climb past capacity — exercises R3 end-to-end (the
+    synthetic rig never fires it: pressure peaks ~0.585 on clip_two)."""
+
+    def __init__(self, ticks: int) -> None:
+        self._ticks = ticks
+
+    @property
+    def ticks(self) -> int:
+        return self._ticks
+
+    def snapshot(self, tick: int) -> OpsSnapshot:
+        return OpsSnapshot(
+            tick=tick,
+            accesses=(AccessEvent(tick=tick, target="a"),),
+            beliefs=(BeliefState(belief_id="a", utility=0.5, last_access_tick=tick),),
+            utility_total=0.5,
+            deposits_since_consolidation=2 * tick,
+            consolidation_capacity=10,
+        )
+
+
+class TestPressureWake(unittest.TestCase):
+    def test_r3_fires_on_pressure_crossing(self):
+        engine = SalusEngine(
+            ops=_RisingPressureOps(ticks=10),
+            bands=(absolute_band("consolidation_pressure", +1, 0.9, 0.8),),
+            rules=(Rule("R3", "consolidation_pressure", +1, "consolidation_summaries"),),
+            floors=Floors(refractory_ticks=1, budget_max=1, budget_window=10),
+            window=2,
+            counterfactual_ticks=1,
+        )
+        result = engine.run()
+        self.assertEqual(len(result.events), 1)
+        e = result.events[0]
+        self.assertEqual(e.summon_class, "consolidation_summaries")
+        self.assertGreater(e.value, 0.9)
+
 
 class TestContractRange(unittest.TestCase):
     def test_bounds_finite_and_satisfied_by_firing_value(self):

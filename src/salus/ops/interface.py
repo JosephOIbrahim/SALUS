@@ -41,7 +41,15 @@ class OpsSnapshot:
 
 
 class OpsReader(Protocol):
-    """The only surface SALUS is permitted to hold. Read-only by shape."""
+    """The only surface SALUS is permitted to hold. Read-only by shape.
+
+    CONTRACT: snapshot(t) must be a PURE function of t — idempotent,
+    side-effect-free, stable across repeated calls. The counterfactual
+    fork shares this reader and replays overlapping spans; an impure
+    reader corrupts the main path silently. Live substrate bindings
+    must therefore record to the canonical ops log and be replayed
+    (ops/replay.py), never served from live mutable state (ADR-0005).
+    """
 
     @property
     def ticks(self) -> int: ...

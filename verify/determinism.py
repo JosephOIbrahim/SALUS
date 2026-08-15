@@ -32,7 +32,10 @@ def main() -> int:
         print(one_hash())
         return 0
     ha = one_hash()
-    env = dict(os.environ, PYTHONHASHSEED="4242")
+    # The child's hash seed must differ from the parent's, or a parent
+    # launched with PYTHONHASHSEED=4242 would compare a value to itself.
+    child_seed = "31337" if os.environ.get("PYTHONHASHSEED") == "4242" else "4242"
+    env = dict(os.environ, PYTHONHASHSEED=child_seed)
     proc = subprocess.run(
         [sys.executable, str(Path(__file__).resolve()), "--hash-only"],
         env=env, capture_output=True, text=True,
@@ -43,7 +46,7 @@ def main() -> int:
         return 1
     hb = proc.stdout.strip().splitlines()[-1]
     print(f"run A (in-process):          {ha}")
-    print(f"run B (PYTHONHASHSEED=4242): {hb}")
+    print(f"run B (PYTHONHASHSEED={child_seed}): {hb}")
     print("DETERMINISTIC" if ha == hb else "NONDETERMINISTIC")
     return 0 if ha == hb else 1
 

@@ -18,8 +18,9 @@ four locked ops --> vitals readers --> setpoints --> wake predicate --> summon
 floors rail: never evict - never mutate - t <= own now - authority declared
 ```
 
-In this repo: `ops/` is the boundary (synthetic now, substrate adapter
-at integration), `vitals/` the readers, `setpoints.py` the bands with
+In this repo: `ops/` is the boundary — synthetic world, plus the
+replay adapter over the canonical ops log that is the integration seam
+(ADR-0005); `vitals/` the readers, `setpoints.py` the bands with
 hysteresis, `wake/` the predicate + policy + floors + contract + events,
 `emit/` canonical evidence.
 
@@ -33,10 +34,12 @@ on later without rework. ADR-0003.
 
 ## Floors are code paths
 
-A crossing blocked by refractory or budget CONSUMES that hysteresis
-episode's edge; it does not queue for later delivery. Refractory
-tuning therefore selects which crossings are representable, not merely
-when they land. (Recorded as intent after the v0.1.1 recheck.)
+A crossing blocked by refractory or budget re-arms its band and
+retries each tick, landing when the floor clears — or never, if the
+value exits the band first. Floors pace wakes; they must never erase a
+condition that stays true. (ADR-0006, superseding the earlier
+consume-as-intent note after a recheck showed a pinned condition could
+stay silent forever.)
 
 Refractory, budget, and causal mask are enforced in `FloorGuard` on the
 wake path. READ-ONLY is structural: SALUS holds an `OpsReader` only;
@@ -102,3 +105,17 @@ same `OpsReader` protocol.
    duplicate rules/bands were silently shadowed; inverted bands
    flapped. All closed in 0.1.2, with falsification tests for every
    probe.
+7. A second independent recheck (post-v0.1.2) confirmed the fork copy
+   set correct by 1,800-config brute force, then found: reader purity
+   was assumed, not contracted (an impure reader corrupts the main
+   path silently — now a stated OpsReader contract, made structural by
+   the ADR-0005 recorded-log seam); a band threshold outside
+   CHANNEL_BOUNDS inverted the contract range (now rejected at
+   construction); blocked crossings were consumed (now retry,
+   ADR-0006); the determinism gate never checked the parent's hash
+   seed (now picks a differing child seed); same-second evidence dirs
+   silently overwrote (now microsecond-stamped, exist_ok=False); and
+   R2/R3 were structurally unfireable on the synthetic rig — the
+   five-yes green rode on R1 alone (R2 and R3 now have end-to-end
+   unit coverage via authored OpsReaders; a mission-level fixture for
+   them is open work).

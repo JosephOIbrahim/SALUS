@@ -18,5 +18,7 @@ jobs:
         run: python -m unittest discover -s tests
       - name: determinism gate (cross-process)
         run: python verify/determinism.py
+      - name: adapter equivalence (wire-format seam)
+        run: python verify/adapter_equivalence.py
       - name: success signature (five yeses)
         run: python verify/success_signature.py

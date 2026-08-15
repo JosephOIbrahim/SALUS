@@ -27,7 +27,7 @@ def build_ops(m: Mission) -> SyntheticOps:
     return SyntheticOps(seed=m.seed, ticks=m.ticks, scattered_start=m.scattered_start)
 
 
-def calibrate(m: Mission, ops: SyntheticOps):
+def calibrate(m: Mission, ops):
     probe = SalusEngine(
         ops=ops, bands=(), rules=(), floors=Floors(1, 1, 1),
         window=m.window, suppress_wakes=True,
@@ -43,8 +43,12 @@ def calibrate(m: Mission, ops: SyntheticOps):
     )
 
 
-def run_once(m: Mission) -> tuple[RunResult, str]:
-    ops = build_ops(m)
+def run_once(m: Mission, ops=None) -> tuple[RunResult, str]:
+    """Run a mission. `ops` defaults to the mission's synthetic world;
+    pass any OpsReader (e.g. ReplayOps) to run the same mission over a
+    different source — the adapter-equivalence gate does exactly this."""
+    if ops is None:
+        ops = build_ops(m)
     bands = calibrate(m, ops)
     engine = SalusEngine(
         ops=ops,
@@ -65,9 +69,12 @@ def run_twice(m: Mission) -> tuple[RunResult, str, RunResult, str]:
 
 
 def write_evidence(m: Mission, r: RunResult, verdict: dict) -> Path:
-    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Microsecond stamp + exist_ok=False: two runs must never silently
+    # share (or overwrite) an evidence folder — a failing verdict.json
+    # replaced by a passing one is the worst kind of quiet.
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
     out = _REPO / "harness" / "runs" / f"{m.name}_{stamp}"
-    out.mkdir(parents=True, exist_ok=True)
+    out.mkdir(parents=True, exist_ok=False)
     write_vitals(out / "vitals.jsonl", r)
     write_events(out / "events.jsonl", r)
     (out / "verdict.json").write_text(

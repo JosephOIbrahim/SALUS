@@ -74,6 +74,11 @@ class Hysteresis:
     def band(self, channel: str) -> Band:
         return self._bands[channel]
 
+    def rearm(self, channel: str) -> None:
+        """Undo a latch whose wake was blocked by a floor — the
+        crossing episode is not consumed, it retries (ADR-0006)."""
+        self._armed[channel] = True
+
     def update(self, channel: str, value: float) -> bool:
         b = self._bands[channel]
         armed = self._armed[channel]

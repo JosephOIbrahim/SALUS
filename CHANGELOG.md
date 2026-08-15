@@ -1,5 +1,46 @@
 # CHANGELOG — SALUS
 
+## 0.2.0 — 2026-08-15 (integration seam + second recheck)
+
+clip_two evidence hashes UNCHANGED. 47 tests. New gate:
+`verify\adapter_equivalence.py`.
+
+**The adapter seam (ADR-0005):**
+
+- **Added:** canonical ops-log wire format (one jsonl line per tick)
+  with `dump_ops()` serializer and `ReplayOps` adapter implementing
+  `OpsReader` over a recorded log. Typed load-time validation
+  (`OpsLogError`): tick gaps, empty belief sets, zero capacity,
+  non-finite utility, malformed JSON — closing the degenerate-shape
+  class found in the first recheck.
+- **Added:** adapter-equivalence gate — synthetic world dumped and
+  replayed must reproduce the identical result hash. Gate-0 will reuse
+  it against real recorded logs.
+- **Changed:** `OpsReader` contract now states snapshot(t) must be
+  pure; the recorded-log seam makes purity structural for live
+  bindings. `runner.run_once(m, ops=...)` accepts any OpsReader.
+
+**Fixes from the second independent recheck:**
+
+- **Fixed:** blocked crossings were consumed — a persistently-true
+  condition under refractory could stay silent forever. Blocked
+  crossings now re-arm and retry until they land or the value exits
+  (ADR-0006, supersedes the consume-as-intent note).
+- **Fixed:** a band threshold outside CHANNEL_BOUNDS inverted the
+  contract range (lo > hi) and every wake raised mid-run; rejected at
+  engine construction.
+- **Fixed:** determinism gate never checked the parent's PYTHONHASHSEED
+  — running it with PYTHONHASHSEED=4242 compared a value to itself.
+  Child seed now always differs from the parent's.
+- **Fixed:** same-second evidence dirs silently overwrote (a failing
+  verdict.json could be replaced by a passing one). Microsecond stamps
+  + exist_ok=False.
+- **Added:** end-to-end R3 pressure-wake test and blocked-crossing
+  retry test — R2/R3 were structurally unfireable on the synthetic rig
+  (u_floor clamps staleness above enter; pressure peaks ~0.585), so
+  every prior five-yes green rode on R1 alone. Mission-level R2/R3
+  fixtures remain open work.
+
 ## 0.1.2 — 2026-08-15 (gate integrity)
 
 Findings from a fresh-context adversarial recheck of 0.1.1. The engine
