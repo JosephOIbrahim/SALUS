@@ -13,6 +13,41 @@ Thesis: **Condition Wakes Memory** — the state is *measured, not reported*.
 
 ---
 
+## The coffee-shop version
+
+Okay — you know that moment. You're deep in something, and your brain
+quietly goes *"hold on… why am I reading this?"* — and then, without
+you asking, it hands you exactly what you needed: the goal, the plan,
+the reason you sat down.
+
+Your brain did that off a **feeling**. Not a search. Nobody typed a
+query.
+
+**That's SALUS.** Every memory system out there waits for a question,
+then matches words to words. SALUS never waits for a question. It sits
+next to a mind — an AI agent's, for now — and watches its vitals, the
+way a nurse watches monitors:
+
+- how **scattered** its attention is getting
+- how **stale** its beliefs are going
+- how much unfiled work is **piling up**
+
+Not interfering. Just watching.
+
+The moment a vital crosses the line it learned during calm — *ping* —
+the right memories surface on their own. Attention scattering? Here's
+your goal again. That's the whole trick: **the condition does the
+retrieving.**
+
+House rules: it can only *read*, never touch. It **proves** after
+every wake that nothing changed. And it can't spam — one nudge, then
+it waits.
+
+All of it deterministic to the byte — every wake replays identically,
+so you can scrub yesterday like footage.
+
+---
+
 ## Is it healthy? One command
 
 From the repo root (system Python ≥ 3.13, zero dependencies):
