@@ -15,6 +15,9 @@ dependencies = []
 usd = ["usd-core"]
 dev = ["pytest", "ruff", "mypy"]
 
+[project.urls]
+Repository = "https://github.com/JosephOIbrahim/SALUS"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
