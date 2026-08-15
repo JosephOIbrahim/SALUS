@@ -33,6 +33,11 @@ on later without rework. ADR-0003.
 
 ## Floors are code paths
 
+A crossing blocked by refractory or budget CONSUMES that hysteresis
+episode's edge; it does not queue for later delivery. Refractory
+tuning therefore selects which crossings are representable, not merely
+when they land. (Recorded as intent after the v0.1.1 recheck.)
+
 Refractory, budget, and causal mask are enforced in `FloorGuard` on the
 wake path. READ-ONLY is structural: SALUS holds an `OpsReader` only;
 every record is a frozen dataclass. The counterfactual fork proves it
@@ -89,3 +94,11 @@ same `OpsReader` protocol.
    direction agreement are validated at engine construction. The
    counterfactual probe has a falsification test — a judge that has
    never said NO is unproven.
+6. A fresh-context adversarial recheck (post-v0.1.1) found the gate
+   weaker than the engine: counterfactual_ticks=0 passed validation
+   and made the read-only probe compare two empty lists (YES while
+   proving nothing); the down-cross contract lo could crash a
+   legitimate negative-utility wake at Gate 0 (ADR-0004 amended);
+   duplicate rules/bands were silently shadowed; inverted bands
+   flapped. All closed in 0.1.2, with falsification tests for every
+   probe.

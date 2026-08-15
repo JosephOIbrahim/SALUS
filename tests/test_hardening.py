@@ -17,9 +17,9 @@ sys.path.insert(0, str(_REPO / "src"))
 sys.path.insert(0, str(_REPO / "harness"))
 
 from salus.emit.jsonl import _canon  # noqa: E402
-from salus.ops.interface import AccessEvent  # noqa: E402
+from salus.ops.interface import AccessEvent, BeliefState, OpsSnapshot  # noqa: E402
 from salus.ops.synthetic import SyntheticOps  # noqa: E402
-from salus.setpoints import absolute_band, calibrate_entropy_band  # noqa: E402
+from salus.setpoints import Hysteresis, absolute_band, calibrate_entropy_band  # noqa: E402
 from salus.vitals.channels import novel_touch_ratio, revisit_rate  # noqa: E402
 from salus.wake.floors import Floors  # noqa: E402
 from salus.wake.policy import DEFAULT_RULES, Rule  # noqa: E402
@@ -74,6 +74,104 @@ class TestCounterfactualFalsification(unittest.TestCase):
         bad = dataclasses.replace(_R.events[0], counterfactual_hash="0" * 64)
         corrupted = dataclasses.replace(_R, events=(bad,) + _R.events[1:])
         self.assertFalse(probes.counterfactual_divergence_zero(_M, corrupted))
+
+    def test_probe_fails_on_empty_proof_span(self):
+        """An event at the final vitals tick has nothing after it to
+        compare — no evidence must read as no proof, not as YES."""
+        from salus.wake.predicate import hash_vitals
+
+        last_tick = _R.vitals[-1].tick
+        vacuous = dataclasses.replace(
+            _R.events[0], tick=last_tick, counterfactual_hash=hash_vitals([])
+        )
+        doctored = dataclasses.replace(_R, events=(vacuous,))
+        self.assertFalse(probes.counterfactual_divergence_zero(_M, doctored))
+
+
+class TestProbeFalsification(unittest.TestCase):
+    """Every judge must be able to say NO."""
+
+    def test_dormant_fails_on_early_wake(self):
+        early = dataclasses.replace(_R.events[0], tick=0)
+        doctored = dataclasses.replace(_R, events=(early,))
+        name, ok, _ = probes.probe_dormant(_M, doctored)
+        self.assertFalse(ok)
+
+    def test_crossing_fails_on_zero_wakes(self):
+        doctored = dataclasses.replace(_R, events=())
+        name, ok, _ = probes.probe_crossing(_M, doctored)
+        self.assertFalse(ok)
+
+    def test_replay_fails_on_hash_mismatch(self):
+        name, ok, _ = probes.probe_replay("a" * 64, "b" * 64)
+        self.assertFalse(ok)
+
+
+class _NegativeUtilityOps:
+    """Minimal OpsReader whose belief utility jumps below zero — the
+    maximally-stale case a real adapter can produce (SyntheticOps
+    clamps at u_floor, so it can never exercise this)."""
+
+    def __init__(self, ticks: int) -> None:
+        self._ticks = ticks
+
+    @property
+    def ticks(self) -> int:
+        return self._ticks
+
+    def snapshot(self, tick: int) -> OpsSnapshot:
+        u = 0.5 if tick < 6 else -0.1
+        return OpsSnapshot(
+            tick=tick,
+            accesses=(AccessEvent(tick=tick, target="b"),),
+            beliefs=(BeliefState(belief_id="b", utility=u, last_access_tick=tick),),
+            utility_total=u,
+            deposits_since_consolidation=0,
+            consolidation_capacity=10,
+        )
+
+
+class TestNegativeUtilityWake(unittest.TestCase):
+    def test_down_cross_on_negative_value_wakes_instead_of_crashing(self):
+        engine = SalusEngine(
+            ops=_NegativeUtilityOps(ticks=12),
+            bands=(absolute_band("staleness_min_u", -1, 0.02, 0.04),),
+            rules=(Rule("R2", "staleness_min_u", -1, "verification_memories"),),
+            floors=Floors(refractory_ticks=1, budget_max=1, budget_window=12),
+            window=4,
+            counterfactual_ticks=2,
+        )
+        result = engine.run()  # must not raise OutOfRangeError
+        self.assertEqual(len(result.events), 1)
+        e = result.events[0]
+        self.assertLess(e.value, 0.0)
+        self.assertLessEqual(e.contract.lo, e.value)
+
+
+class TestConstructionRejections(unittest.TestCase):
+    def test_duplicate_rule_channel_rejected(self):
+        ops = SyntheticOps(seed=1, ticks=10, scattered_start=5)
+        rules = (
+            Rule("RA", "attention_entropy", +1, "orientation_anchors"),
+            Rule("RB", "attention_entropy", +1, "something_else"),
+        )
+        with self.assertRaises(ValueError):
+            SalusEngine(ops=ops, bands=(), rules=rules,
+                        floors=Floors(1, 1, 1), window=4)
+
+    def test_duplicate_band_channel_rejected(self):
+        with self.assertRaises(ValueError):
+            Hysteresis([
+                absolute_band("attention_entropy", +1, 2.0, 1.0),
+                absolute_band("attention_entropy", +1, 99.0, 1.0),
+            ])
+
+    def test_inverted_band_rejected(self):
+        # exit past enter on the wrong side => the band would flap
+        with self.assertRaises(ValueError):
+            Hysteresis([absolute_band("staleness_min_u", -1, 0.02, 0.01)])
+        with self.assertRaises(ValueError):
+            Hysteresis([absolute_band("attention_entropy", +1, 2.0, 3.0)])
 
 
 class TestContractRange(unittest.TestCase):
@@ -137,6 +235,14 @@ class TestMissionSchema(unittest.TestCase):
     def test_incoherent_expectations_rejected(self):
         raw = self._valid_raw()
         raw["expectations"]["max_wakes"] = 0  # below min_wakes=1
+        with self.assertRaises(MissionError):
+            self._load(raw)
+
+    def test_zero_counterfactual_ticks_rejected(self):
+        """cft=0 would make the read-only probe compare two empty lists
+        — a YES that proves nothing."""
+        raw = self._valid_raw()
+        raw["counterfactual_ticks"] = 0
         with self.assertRaises(MissionError):
             self._load(raw)
 

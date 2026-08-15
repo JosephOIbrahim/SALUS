@@ -49,8 +49,24 @@ class Hysteresis:
     only after the value exits past the exit threshold."""
 
     def __init__(self, bands: Sequence[Band]) -> None:
-        self._bands = {b.channel: b for b in bands}
-        self._armed = {b.channel: True for b in bands}
+        self._bands: dict[str, Band] = {}
+        for b in bands:
+            if b.direction not in (1, -1):
+                raise ValueError(f"band {b.channel!r}: direction must be +1 or -1")
+            if b.channel in self._bands:
+                raise ValueError(f"duplicate band for channel {b.channel!r}")
+            # exit must sit on the re-arm side of enter, or the band
+            # flaps — defeating the one thing hysteresis exists for.
+            if b.direction > 0 and b.exit > b.enter:
+                raise ValueError(
+                    f"band {b.channel!r}: up-cross requires exit <= enter"
+                )
+            if b.direction < 0 and b.exit < b.enter:
+                raise ValueError(
+                    f"band {b.channel!r}: down-cross requires exit >= enter"
+                )
+            self._bands[b.channel] = b
+        self._armed = {c: True for c in self._bands}
 
     def has(self, channel: str) -> bool:
         return channel in self._bands

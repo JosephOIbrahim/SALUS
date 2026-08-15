@@ -15,7 +15,7 @@ python verify\success_signature.py
 
 ```
 python verify\success_signature.py                        THE gate
-python -m unittest discover -s tests                      parts check (27)
+python -m unittest discover -s tests                      parts check (36)
 python verify\determinism.py                              replay identity, cross-process
 python harness\runner.py harness\missions\<mission>.json  general runner
 ```

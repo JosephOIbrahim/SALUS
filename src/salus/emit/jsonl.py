@@ -18,7 +18,7 @@ def _canon(obj: object) -> str:
 
 def write_vitals(path: Path, result: RunResult) -> None:
     lines = [_canon(v.as_dict()) for v in result.vitals]
-    path.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8", newline="\n")
 
 
 def write_events(path: Path, result: RunResult) -> None:

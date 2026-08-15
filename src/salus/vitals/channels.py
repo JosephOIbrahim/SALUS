@@ -24,16 +24,20 @@ CHANNELS = (
 
 # Finite contract bounds per channel. The wake contract needs a
 # validatable range; infinity is not one (and is not strict JSON).
-# Entropy: bits, 2^64 distinct targets is a generous ceiling. Trend and
-# pressure: wide finite sentinels — the point is detectability, not
-# tightness.
+# Bounds derive from what the vitals COMPUTATION guarantees, never from
+# what the substrate promises: entropy is >= 0 by formula (64 bits =
+# 2^64 targets, a generous ceiling) and the ratios are counts/counts in
+# [0, 1]. Channels built from adapter-provided floats (staleness,
+# trend, pressure) get wide finite sentinels — the OpsReader protocol
+# guarantees nothing about their sign or scale, and a legitimate
+# down-cross wake on a negative value must validate, not crash.
 CHANNEL_BOUNDS: dict[str, tuple[float, float]] = {
-    "staleness_min_u": (0.0, 1.0),
+    "staleness_min_u": (-1e6, 1e6),
     "attention_entropy": (0.0, 64.0),
     "revisit_rate": (0.0, 1.0),
     "novel_touch_ratio": (0.0, 1.0),
     "utility_trend": (-1e6, 1e6),
-    "consolidation_pressure": (0.0, 1e6),
+    "consolidation_pressure": (-1e6, 1e6),
 }
 
 

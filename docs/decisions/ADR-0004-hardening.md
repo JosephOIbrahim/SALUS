@@ -29,3 +29,14 @@ this ADR (CHANGELOG 0.1.1). A future negative-valued channel rule
 Adding a new mutable field to `SalusEngine` requires extending the
 fork's copy list — guarded by the falsification test plus the five-yes
 gate, which fail on fork/main divergence.
+
+**Amendment (2026-08-15, post-recheck):** the "negative-valued channel
+now validates" consequence was overstated. Down-cross ranges pinned
+`lo` to the channel's lower bound, and staleness_min_u's bound (0.0)
+was a substrate assumption, not a protocol guarantee — a legitimately
+negative utility under a real adapter would have raised
+OutOfRangeError on the shipped R2_staleness rule. As of 0.1.2, bounds
+derive only from what the vitals computation itself guarantees:
+entropy and the ratios keep tight bounds; adapter-derived channels
+(staleness_min_u, utility_trend, consolidation_pressure) carry wide
+finite sentinels. Found by fresh-context adversarial recheck.

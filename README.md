@@ -23,7 +23,7 @@ python verify\success_signature.py
 Anything else → the failing line *names the broken property*.
 
 ```
-SALUS v0.1.1 — success signature — mission: clip_two
+SALUS v0.1.2 — success signature — mission: clip_two
   [1] dormant while entropy low ............. YES
   [2] wake fires on the crossing ............ YES
   [3] identical replay, run twice ........... YES
@@ -62,7 +62,7 @@ stateDiagram-v2
 
 ```
 python verify\success_signature.py                        # THE gate
-python -m unittest discover -s tests                      # parts check (27)
+python -m unittest discover -s tests                      # parts check (36)
 python verify\determinism.py                              # replay identity, cross-process
 python harness\runner.py harness\missions\clip_two.json   # general runner
 ruff check .                                              # lint (CI pins 0.15.10)

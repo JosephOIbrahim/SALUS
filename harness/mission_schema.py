@@ -96,8 +96,13 @@ def load_mission(path: Path) -> Mission:
     )
     if mission.ticks <= 0 or mission.window < 1:
         raise MissionError("require ticks > 0 and window >= 1")
-    if mission.refractory_ticks < 0 or mission.counterfactual_ticks < 0:
-        raise MissionError("refractory_ticks and counterfactual_ticks must be >= 0")
+    if mission.refractory_ticks < 0:
+        raise MissionError("refractory_ticks must be >= 0")
+    if mission.counterfactual_ticks < 1:
+        raise MissionError(
+            "counterfactual_ticks must be >= 1 — a zero-length fork makes "
+            "the read-only proof vacuous"
+        )
     if mission.budget_max < 1 or mission.budget_window < 1:
         raise MissionError("require budget_max >= 1 and budget_window >= 1")
     if not (mission.window <= mission.calibration_ticks <= mission.scattered_start):

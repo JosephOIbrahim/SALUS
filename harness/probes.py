@@ -37,6 +37,8 @@ def counterfactual_divergence_zero(m: Mission, r: RunResult) -> bool:
     for e in r.events:
         start = by_tick[e.tick] + 1
         span = r.vitals[start : start + m.counterfactual_ticks]
+        if not span:
+            return False  # no evidence is not proof — an empty span demonstrates nothing
         if hash_vitals(span) != e.counterfactual_hash:
             return False
     return True

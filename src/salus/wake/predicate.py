@@ -66,11 +66,19 @@ class SalusEngine:
         self._vitals: list[Vitals] = []
         self._events: list[WakeEvent] = []
         self._tick = 0
+        ruled: set[str] = set()
         for rule in self.rules:
             if rule.channel not in CHANNELS:
                 raise ValueError(
                     f"rule {rule.rule_id}: unknown channel {rule.channel!r}"
                 )
+            if rule.channel in ruled:
+                raise ValueError(
+                    f"rule {rule.rule_id}: duplicate channel {rule.channel!r} — "
+                    "one hysteresis state per channel means only the first "
+                    "rule could ever fire"
+                )
+            ruled.add(rule.channel)
             if self.hys.has(rule.channel):
                 b = self.hys.band(rule.channel)
                 if b.direction != rule.direction:
