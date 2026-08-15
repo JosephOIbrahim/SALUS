@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+harness/runs/*
+!harness/runs/.gitkeep
+.venv/
+*.egg-info/
+build/
+dist/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
