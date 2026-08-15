@@ -1,5 +1,20 @@
 # CHANGELOG — SALUS
 
+## 0.2.1 — 2026-08-15 (public readiness)
+
+No engine changes; evidence hashes unchanged.
+
+- **License:** MIT (chosen over Apache-2.0 deliberately — Apache
+  carries an express patent grant; MIT stays silent on patents while
+  filings are pending).
+- **NOTICE.md** rewritten for a public audience: MIT pointer,
+  informational patents-pending line, issues/discussion welcome.
+- **Added:** `docs/CASE_STUDY.md` — the wake narrative with the
+  shipped clip_two numbers, linked from README.
+- **Docs:** machine-specific paths generalized to "repo root"; CI
+  badge in README; internal project codenames in BLUEPRINT section 10
+  generalized (mechanism content unchanged, noted in the file).
+
 ## 0.2.0 — 2026-08-15 (integration seam + second recheck)
 
 clip_two evidence hashes UNCHANGED. 47 tests. New gate:

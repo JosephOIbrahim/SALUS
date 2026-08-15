@@ -26,7 +26,7 @@ python verify\success_signature.py
 Anything else → the failing line *names the broken property*.
 
 ```
-SALUS v0.2.0 — success signature — mission: clip_two
+SALUS v0.2.1 — success signature — mission: clip_two
   [1] dormant while entropy low ............. YES
   [2] wake fires on the crossing ............ YES
   [3] identical replay, run twice ........... YES
@@ -110,8 +110,10 @@ harness\runs\<name>_<stamp>\   vitals.jsonl · events.jsonl · verdict.json
 | **Handle with care** | `src\salus\wake\` — floors + doctrine live there |
 | **Read first** | `BLUEPRINT.md` (source of truth) · `DESIGN.md` · `NOTICE.md` |
 
+**The story:** `docs\CASE_STUDY.md` — what a wake looks like in a real
+session, with the shipped numbers.
+
 **History:** `CHANGELOG.md` · **Decisions:** `docs\decisions\ADR-*.md`
 
-**Source-available, all rights reserved — patents pending.** No use,
-reuse, or patent rights granted; reading and evaluation only. See
-`LICENSE` and `NOTICE.md`. External contributions not accepted.
+**MIT licensed** — see `LICENSE` and `NOTICE.md`. Issues and
+discussion welcome.

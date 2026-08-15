@@ -2,6 +2,8 @@
 
 *Imported verbatim as source of truth. Subsystem name confirmed by use: SALUS.*
 
+*Public release note: internal project codenames in section 10 generalized; mechanism content unchanged.*
+
 *Where this conflicts with older spec docs, this blueprint wins — it's newer.*
 
 *Build amendments are recorded in DESIGN.md and docs/decisions/ (ADR-0002: Gate-0 re-sequenced).*
@@ -132,11 +134,11 @@ Five yeses = v1 shipped. **Achieved 2026-08-15: 5/5.** Push to ship; the last 10
 
 **Dailies (practice).** Wake events + vitals are what the scrubber scrubs; CWM makes *condition* a replayable track. Ship artifact: the AOUSD second post. ⚠ Patent-status check before posting.
 
-**Co-regulation (research).** One agent's wake thresholds adjusted by another under LIVRPS authority + floors. Ship artifact: the paper. Octavius's first real job.
+**Co-regulation (research).** One agent's wake thresholds adjusted by another under LIVRPS authority + floors. Ship artifact: the paper.
 
-**Instrument (Charlie).** Wakes as musical events — a voice's memory surfacing *is* a phrase entering.
+**Instrument.** Wakes as musical events — a voice's memory surfacing *is* a phrase entering.
 
-**ND-OS.** The same predicate pointed at Joe: depleted-state wakes different scaffolding than rolling-state. One instrument, two targets.
+**ND-OS.** The same predicate pointed at a human operator: depleted-state wakes different scaffolding than rolling-state. One instrument, two targets.
 
 **Generic agent ops.** Anti-drift: entropy spike wakes orientation anchors; staleness wakes verification. Self-healing retrieval without a query.
 

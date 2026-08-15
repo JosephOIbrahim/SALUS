@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "salus"
-version = "0.2.0"
+version = "0.2.1"
 description = "SALUS — vitals layer and deterministic wake predicate (Condition Wakes Memory)"
 requires-python = ">=3.13"
-license = { file = "LICENSE" }
+license = { text = "MIT" }
 authors = [{ name = "Joseph Ibrahim" }]
 dependencies = []
 

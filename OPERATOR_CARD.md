@@ -51,4 +51,4 @@ Handle with care .... `src\salus\wake\` (floors + doctrine)
 
 Read first .......... `BLUEPRINT.md` · `DESIGN.md` · `NOTICE.md`
 
-**Source-available, all rights reserved — patents pending. (LICENSE · NOTICE.md)**
+**MIT licensed. (LICENSE · NOTICE.md)**
