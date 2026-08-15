@@ -11,7 +11,9 @@ jobs:
         with:
           python-version: "3.13"
       - name: lint
-        run: pip install ruff && ruff check .
+        # Pinned: an unpinned linter is a nondeterministic gate. Bump
+        # deliberately, alongside a local run of the same version.
+        run: pip install ruff==0.15.10 && ruff check .
       - name: unit gates
         run: python -m unittest discover -s tests
       - name: determinism gate (cross-process)
