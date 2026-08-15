@@ -9,11 +9,13 @@ the blueprint, the blueprint wins (it is newer).
 ## Commands
 
 ```
-python -m unittest discover -s tests      # unit gates (47)
+python -m unittest discover -s tests      # unit gates (63)
 python verify\determinism.py              # cross-process hash compare
 python verify\adapter_equivalence.py      # wire-format seam faithful
 python verify\success_signature.py        # THE gate: five yeses or fail
 python harness\runner.py harness\missions\clip_two.json
+python tools\validate_log.py <log>        # pre-flight an ops log
+python examples\instrumented_agent.py     # end-to-end demo, agent -> wake
 ruff check .                              # lint (optional locally; CI runs it)
 ```
 

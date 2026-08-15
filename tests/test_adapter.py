@@ -30,7 +30,7 @@ def _dump_lines(ops) -> list[str]:
 def _load_from_lines(lines: list[str]) -> ReplayOps:
     with tempfile.TemporaryDirectory() as d:
         p = Path(d) / "ops.jsonl"
-        p.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        p.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="")
         return ReplayOps(p)
 
 

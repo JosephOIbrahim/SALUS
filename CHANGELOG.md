@@ -1,5 +1,55 @@
 # CHANGELOG — SALUS
 
+## 0.3.0 — 2026-08-15 (export shim)
+
+No engine changes; clip_two evidence hashes UNCHANGED (verified
+byte-for-byte against the last 0.2.x run). 63 tests (47 -> 63).
+
+The other half of the ADR-0005 seam: 0.2.0 taught SALUS to *read* a
+recorded ops log; 0.3.0 gives external agents the tools to *write*
+one correctly.
+
+- **Added:** `OpsLogWriter` (`src/salus/ops/shim.py`) — appends one
+  canonical line per tick, validating each snapshot against the wire
+  contract at write time (contiguous ticks from 0, non-empty beliefs,
+  capacity >= 1, all floats finite; typed `OpsLogError` rejection
+  leaves the file untouched). LF-only on Windows, flush-per-line,
+  refuses to clobber an existing file unless told to.
+- **Changed:** canonical bytes now have a single source of truth —
+  `snapshot_record()` / `record_line()` extracted from `dump_ops`,
+  shared by writer and replay. `dump_ops` output is byte-identical.
+- **Added:** `docs/WIRE_FORMAT.md` — the v1 wire-format spec:
+  file-level rules, field-by-field constraints, validation semantics,
+  versioning stance.
+- **Added:** `tools/validate_log.py` — pre-flight CLI that loads a
+  log through `ReplayOps` itself, so "validator says yes" and "SALUS
+  will load it" are the same fact.
+- **Added:** `examples/instrumented_agent.py` — end-to-end demo: a
+  seeded toy agent writes its own ops log through the shim, SALUS
+  replays it and wakes at the scatter point, reproducing the case
+  study numbers exactly (one wake, tick 142).
+- **Tests:** writer/dump_ops byte-identity, replay round-trip,
+  mission-hash equivalence over a writer log, typed rejections,
+  partial-write safety, plus subprocess tests running the example
+  and validator CLI end-to-end.
+
+**Fixes from the workflow's adversarial verify phase (all three
+confirmed findings closed):**
+
+- **Fixed:** non-finite JSON tokens (`Infinity`/`NaN`) in int-coerced
+  fields escaped as raw OverflowError, breaking the "always a typed
+  OpsLogError" claim; tokens now refused at parse time and
+  OverflowError joins the typed boundary.
+- **Fixed:** the reader accepted non-canonical logs the spec forbids —
+  CRLF endings (universal-newline translation was hiding the CR
+  bytes), missing final newline, non-ASCII bytes, float/string/bool
+  where integers are required. All now typed rejections; strictness
+  test suite added (63 -> 73 tests). The repo's own test helpers were
+  producing CRLF logs on Windows — the drift trap, demonstrated.
+- **Fixed:** both writers could silently produce the empty log the
+  reader rejects; `dump_ops` and a zero-append `OpsLogWriter` close
+  now refuse, so the violation surfaces at the recording end.
+
 ## 0.2.1 — 2026-08-15 (public readiness)
 
 No engine changes; evidence hashes unchanged.

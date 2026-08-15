@@ -61,7 +61,7 @@ python verify\success_signature.py
 Anything else → the failing line *names the broken property*.
 
 ```
-SALUS v0.2.1 — success signature — mission: clip_two
+SALUS v0.3.0 — success signature — mission: clip_two
   [1] dormant while entropy low ............. YES
   [2] wake fires on the crossing ............ YES
   [3] identical replay, run twice ........... YES
@@ -100,10 +100,12 @@ stateDiagram-v2
 
 ```
 python verify\success_signature.py                        # THE gate
-python -m unittest discover -s tests                      # parts check (47)
+python -m unittest discover -s tests                      # parts check (63)
 python verify\determinism.py                              # replay identity, cross-process
 python verify\adapter_equivalence.py                      # wire-format seam faithful
 python harness\runner.py harness\missions\clip_two.json   # general runner
+python tools\validate_log.py <log>                        # pre-flight an ops log
+python examples\instrumented_agent.py                     # end-to-end demo, agent -> wake
 ruff check .                                              # lint (CI pins 0.15.10)
 ```
 
@@ -147,6 +149,9 @@ harness\runs\<name>_<stamp>\   vitals.jsonl · events.jsonl · verdict.json
 
 **The story:** `docs\CASE_STUDY.md` — what a wake looks like in a real
 session, with the shipped numbers.
+
+**The wire:** `docs\WIRE_FORMAT.md` — the ops-log format an external
+agent writes so SALUS can watch it.
 
 **History:** `CHANGELOG.md` · **Decisions:** `docs\decisions\ADR-*.md`
 

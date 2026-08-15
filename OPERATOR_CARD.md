@@ -15,10 +15,12 @@ python verify\success_signature.py
 
 ```
 python verify\success_signature.py                        THE gate
-python -m unittest discover -s tests                      parts check (47)
+python -m unittest discover -s tests                      parts check (63)
 python verify\determinism.py                              replay identity, cross-process
 python verify\adapter_equivalence.py                      wire-format seam faithful
 python harness\runner.py harness\missions\<mission>.json  general runner
+python tools\validate_log.py <log>                        pre-flight an ops log
+python examples\instrumented_agent.py                     end-to-end demo, agent -> wake
 ```
 
 ## Evidence
