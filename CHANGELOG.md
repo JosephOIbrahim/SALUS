@@ -1,5 +1,48 @@
 # CHANGELOG — SALUS
 
+## 0.3.1 — 2026-08-15 (mission coverage — clip_three)
+
+No engine changes; clip_two evidence hashes UNCHANGED (result hash
+`09ae1bc3…b71d7d23`, first wake t=142). 86 tests (73 -> 86).
+
+Closes the coverage hole the second recheck logged as open work.
+R2_staleness and R3_pressure were structurally unfireable on the
+synthetic rig — `u_floor=0.05` sits above `staleness_enter=0.02`, and
+coin-flip deposits peak near 0.585 of capacity, below
+`pressure_enter=0.9` — so every mission-level five-yes green rode on
+R1_entropy alone. The two rules had end-to-end unit coverage through
+authored OpsReaders; they had no mission.
+
+- **Added:** `clip_three` — a mission driven by an authored replay log
+  (ADR-0005 seam) that fires exactly two wakes: a forgotten belief
+  decaying past the staleness band (**R2, tick 136**, summoning
+  verification memories), then unfiled deposits piling past
+  consolidation capacity (**R3, tick 193**, summoning consolidation
+  summaries). Attention is pinned on four targets for all 220 ticks,
+  so entropy is exactly 2.0 bits on every sample against a 2.5 band —
+  R1 stays silent by construction and the two quiet channels are the
+  only story.
+- **Added:** `tools/make_clip_three.py` — the world's generator. No
+  RNG, no wall clock: every value is a module-level constant or an
+  exact function of the tick, and the decay is iterated multiplication
+  rather than `math.exp`, because IEEE 754 specifies multiplication
+  exactly while libm transcendentals may differ in the last bit
+  between platforms. The generated log
+  (`harness/missions/logs/clip_three.ops.jsonl`) is committed as a
+  fixture and a test regenerates it byte for byte — a fixture that
+  drifts from its generator is worse than no generator.
+- **Changed:** missions may carry one optional key, `ops_log`, naming
+  a canonical log to replay instead of the seeded synthetic world.
+  Absent, behavior is identical to before; every other unknown key is
+  still a hard rejection, so the typo trap stays shut. A named-but-
+  absent log is a typed `MissionError` from `runner.build_ops`, not a
+  traceback out of the adapter.
+- **CI:** both missions now run as explicit gate steps.
+- **Tests:** fixture byte-identity, adapter selection per mission,
+  the two wake ticks pinned, rule ids and summon classes in order,
+  refractory spacing, entropy never reaching its band, and the typed
+  rejections for a missing or non-string `ops_log`.
+
 ## 0.3.0 — 2026-08-15 (export shim)
 
 No engine changes; clip_two evidence hashes UNCHANGED (verified

@@ -61,7 +61,7 @@ python verify\success_signature.py
 Anything else → the failing line *names the broken property*.
 
 ```
-SALUS v0.3.0 — success signature — mission: clip_two
+SALUS v0.3.1 — success signature — mission: clip_two
   [1] dormant while entropy low ............. YES
   [2] wake fires on the crossing ............ YES
   [3] identical replay, run twice ........... YES
@@ -100,17 +100,27 @@ stateDiagram-v2
 
 ```
 python verify\success_signature.py                        # THE gate
-python -m unittest discover -s tests                      # parts check (63)
+python -m unittest discover -s tests                      # parts check (86)
 python verify\determinism.py                              # replay identity, cross-process
 python verify\adapter_equivalence.py                      # wire-format seam faithful
-python harness\runner.py harness\missions\clip_two.json   # general runner
+python harness\runner.py harness\missions\clip_two.json   # mission: R1 entropy
+python harness\runner.py harness\missions\clip_three.json # mission: R2 + R3
+python tools\make_clip_three.py                           # regenerate clip_three's log
 python tools\validate_log.py <log>                        # pre-flight an ops log
 python examples\instrumented_agent.py                     # end-to-end demo, agent -> wake
 ruff check .                                              # lint (CI pins 0.15.10)
 ```
 
 **Zero dependencies.** System Python ≥ 3.13, run from repo root.
-CI runs lint + all three gates on every push.
+CI runs lint + all three gates + both missions on every push.
+
+**Two missions.** `clip_two` drives the seeded synthetic world, where
+scattering attention crosses the entropy band (R1). `clip_three`
+replays an authored ops log where attention stays flat and the two
+quiet channels do the work instead — a forgotten belief decaying past
+the staleness band (R2, tick 136), then unfiled deposits piling past
+consolidation capacity (R3, tick 193). Its log is a committed fixture;
+`tools\make_clip_three.py` regenerates it byte for byte.
 
 ---
 
@@ -144,6 +154,7 @@ harness\runs\<name>_<stamp>\   vitals.jsonl · events.jsonl · verdict.json
 | Zone | Paths |
 |---|---|
 | **Edit freely** | `harness\missions\*.json` · `tests\` |
+| **Regenerate, never hand-edit** | `harness\missions\logs\*.ops.jsonl` — fixtures from `tools\make_*.py` |
 | **Handle with care** | `src\salus\wake\` — floors + doctrine live there |
 | **Read first** | `BLUEPRINT.md` (source of truth) · `DESIGN.md` · `NOTICE.md` |
 

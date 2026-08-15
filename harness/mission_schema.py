@@ -39,6 +39,9 @@ class Mission:
     pressure_enter: float
     pressure_exit: float
     expectations: Expectations
+    # Optional: a canonical ops log (ADR-0005) to replay instead of the
+    # seeded synthetic world. Absent => synthetic, exactly as before.
+    ops_log: str | None = None
 
 
 _REQUIRED = (
@@ -47,6 +50,10 @@ _REQUIRED = (
     "entropy_k_sigma", "entropy_min_band", "staleness_enter", "staleness_exit",
     "pressure_enter", "pressure_exit", "expectations",
 )
+
+# The only keys a mission may omit. Everything outside _REQUIRED +
+# _OPTIONAL is still a hard rejection — the typo trap stays shut.
+_OPTIONAL = ("ops_log",)
 
 _REQUIRED_EXPECTATIONS = (
     "min_wakes", "max_wakes", "dormant_until", "zero_floor_violations",
@@ -60,9 +67,12 @@ def load_mission(path: Path) -> Mission:
         raise MissionError(f"mission missing keys: {missing}")
     # Unknown keys are rejected, not ignored: a typo'd key silently
     # falling back to nothing is how missions drift from their authors.
-    unknown = sorted(set(raw) - set(_REQUIRED))
+    unknown = sorted(set(raw) - set(_REQUIRED) - set(_OPTIONAL))
     if unknown:
         raise MissionError(f"mission has unknown keys: {unknown}")
+    ops_log = raw.get("ops_log")
+    if ops_log is not None and not isinstance(ops_log, str):
+        raise MissionError("ops_log must be a string path relative to the repo root")
     exp = raw["expectations"]
     missing_exp = [k for k in _REQUIRED_EXPECTATIONS if k not in exp]
     if missing_exp:
@@ -93,6 +103,7 @@ def load_mission(path: Path) -> Mission:
             dormant_until=int(exp["dormant_until"]),
             zero_floor_violations=bool(exp["zero_floor_violations"]),
         ),
+        ops_log=ops_log,
     )
     if mission.ticks <= 0 or mission.window < 1:
         raise MissionError("require ticks > 0 and window >= 1")

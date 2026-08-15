@@ -9,11 +9,13 @@ the blueprint, the blueprint wins (it is newer).
 ## Commands
 
 ```
-python -m unittest discover -s tests      # unit gates (63)
+python -m unittest discover -s tests      # unit gates (86)
 python verify\determinism.py              # cross-process hash compare
 python verify\adapter_equivalence.py      # wire-format seam faithful
 python verify\success_signature.py        # THE gate: five yeses or fail
-python harness\runner.py harness\missions\clip_two.json
+python harness\runner.py harness\missions\clip_two.json     # R1 entropy
+python harness\runner.py harness\missions\clip_three.json   # R2 + R3
+python tools\make_clip_three.py           # regenerate clip_three's log
 python tools\validate_log.py <log>        # pre-flight an ops log
 python examples\instrumented_agent.py     # end-to-end demo, agent -> wake
 ruff check .                              # lint (optional locally; CI runs it)
@@ -32,6 +34,7 @@ src\salus\setpoints  calibration + hysteresis bands
 src\salus\wake       predicate, policy (Design B), floors, contract, events
 src\salus\emit       canonical jsonl + optional .usda (usd-core extra)
 harness\             missions-as-data, runner, probes, timestamped runs
+harness\missions\logs\  authored replay-log fixtures (see tools\make_*.py)
 verify\              gates as code — determinism + the five-yes signature
 tests\               unit tests (stdlib unittest)
 ```

@@ -1,0 +1,6 @@
+# The wire format is LF-only bytes (docs/WIRE_FORMAT.md), and ReplayOps
+# rejects a CR byte anywhere in a log. Without this, a core.autocrlf
+# checkout on Windows would hand back the exact bytes the reader
+# refuses — and the committed fixture would stop matching its generator.
+*.ops.jsonl -text
+*.jsonl -text

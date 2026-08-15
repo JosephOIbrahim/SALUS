@@ -1,0 +1,25 @@
+{
+  "name": "clip_three",
+  "seed": 20260815,
+  "ticks": 220,
+  "scattered_start": 130,
+  "window": 32,
+  "calibration_ticks": 120,
+  "refractory_ticks": 40,
+  "budget_max": 2,
+  "budget_window": 220,
+  "counterfactual_ticks": 10,
+  "entropy_k_sigma": 4.0,
+  "entropy_min_band": 0.5,
+  "staleness_enter": 0.02,
+  "staleness_exit": 0.04,
+  "pressure_enter": 0.9,
+  "pressure_exit": 0.8,
+  "ops_log": "harness/missions/logs/clip_three.ops.jsonl",
+  "expectations": {
+    "min_wakes": 2,
+    "max_wakes": 2,
+    "dormant_until": 130,
+    "zero_floor_violations": true
+  }
+}

@@ -24,5 +24,9 @@ jobs:
         run: python verify/determinism.py
       - name: adapter equivalence (wire-format seam)
         run: python verify/adapter_equivalence.py
+      - name: mission — clip_two (synthetic world, R1 entropy)
+        run: python harness/runner.py harness/missions/clip_two.json
+      - name: mission — clip_three (replay log, R2 staleness + R3 pressure)
+        run: python harness/runner.py harness/missions/clip_three.json
       - name: success signature (five yeses)
         run: python verify/success_signature.py

@@ -14,17 +14,28 @@ sys.path.insert(0, str(_REPO / "src"))
 sys.path.insert(0, str(_REPO / "harness"))
 
 from salus.emit.jsonl import result_hash, write_events, write_vitals  # noqa: E402
+from salus.ops.interface import OpsReader  # noqa: E402
+from salus.ops.replay import ReplayOps  # noqa: E402
 from salus.ops.synthetic import SyntheticOps  # noqa: E402
 from salus.setpoints import absolute_band, calibrate_entropy_band  # noqa: E402
 from salus.wake.floors import Floors  # noqa: E402
 from salus.wake.policy import DEFAULT_RULES  # noqa: E402
 from salus.wake.predicate import RunResult, SalusEngine  # noqa: E402
 
-from mission_schema import Mission, load_mission  # noqa: E402
+from mission_schema import Mission, MissionError, load_mission  # noqa: E402
 
 
-def build_ops(m: Mission) -> SyntheticOps:
-    return SyntheticOps(seed=m.seed, ticks=m.ticks, scattered_start=m.scattered_start)
+def build_ops(m: Mission) -> OpsReader:
+    """The mission's world: a recorded ops log when the mission names
+    one, otherwise the seeded synthetic rig. A named-but-absent log is
+    a typed MissionError — the mission is wrong, and saying so beats a
+    FileNotFoundError traceback from inside the adapter."""
+    if m.ops_log is None:
+        return SyntheticOps(seed=m.seed, ticks=m.ticks, scattered_start=m.scattered_start)
+    path = _REPO / m.ops_log
+    if not path.is_file():
+        raise MissionError(f"mission {m.name!r}: ops_log not found: {path}")
+    return ReplayOps(path)
 
 
 def calibrate(m: Mission, ops):
